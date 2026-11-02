@@ -1,4 +1,5 @@
 
+import torch
 from ultralytics import YOLO
 
 from vision.logic import VisionLogic
@@ -15,6 +16,14 @@ from config import (
 class ObjectDetector:
 
     def __init__(self, model_path=None):
+
+        # Limit CPU thread usage
+        torch.set_num_threads(2)
+
+        try:
+            torch.set_num_interop_threads(1)
+        except RuntimeError:
+            pass
 
         if model_path is None:
             model_path = MODEL_PATH
@@ -47,6 +56,9 @@ class ObjectDetector:
             persist=True,
             tracker="bytetrack.yaml",
             conf=CONFIDENCE_THRESHOLD,
+            imgsz=416,
+            device="cpu",
+            max_det=20,
             verbose=False
         )
 
