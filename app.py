@@ -5,6 +5,9 @@ import time
 import queue
 import threading
 
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
+import av
+
 from vision.detector import ObjectDetector
 from vision.stream import CameraStream
 from alerts.alert_manager import AlertManager
@@ -41,6 +44,65 @@ if "runtime" not in st.session_state:
 
 
 runtime = st.session_state.runtime
+# --------------------------------
+# Browser camera processor
+# --------------------------------
+
+class CameraProcessor(VideoProcessorBase):
+
+    def __init__(self, runtime, audio_queue):
+        self.runtime = runtime
+        self.audio_queue = audio_queue
+
+        self.detector = ObjectDetector()
+        self.alert_manager = AlertManager(cooldown=10.0)
+        self.frame_count = 0
+
+    def recv(self, frame):
+
+        img = frame.to_ndarray(format="bgr24")
+        self.frame_count += 1
+
+        if self.frame_count % 2 == 0:
+
+            with self.runtime["lock"]:
+                language = self.runtime["language"]
+                mode = self.runtime["mode"]
+
+            detections = self.detector.detect(img)
+
+            message = self.alert_manager.process(
+                detections,
+                mode=mode,
+                language=language
+            )
+
+            if message:
+                with self.runtime["lock"]:
+                    self.runtime["alert"] = message
+
+                if self.audio_queue.empty():
+                    self.audio_queue.put_nowait(
+                        (message, language)
+                    )
+
+            display_frame = img.copy()
+
+            if self.detector.latest_results:
+                display_frame = self.detector.latest_results[0].plot()
+
+            with self.runtime["lock"]:
+                self.runtime["detections"] = detections
+                self.runtime["frame"] = cv2.cvtColor(
+                    display_frame,
+                    cv2.COLOR_BGR2RGB
+                )
+                self.runtime["status"] = "Running"
+
+        return av.VideoFrame.from_ndarray(
+            img,
+            format="bgr24"
+        )
 
 
 # --------------------------------
