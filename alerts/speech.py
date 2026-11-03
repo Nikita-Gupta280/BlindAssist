@@ -1,10 +1,17 @@
-
 # alerts/speech.py
 
 import os
 import hashlib
-import pyttsx3
-import pygame
+
+try:
+    import pyttsx3
+except ImportError:
+    pyttsx3 = None
+
+try:
+    import pygame
+except ImportError:
+    pygame = None
 
 
 class Speech:
@@ -15,36 +22,54 @@ class Speech:
             os.path.dirname(__file__), "audio"
         )
 
-        # Initialise Hindi audio playback
-        if self.language == "hi":
-            pygame.mixer.init()
+        self.audio_available = False
+
+        if self.language == "hi" and pygame is not None:
+            try:
+                pygame.mixer.init()
+                self.audio_available = True
+            except Exception as e:
+                print("Audio initialization failed:", e)
 
     def speak(self, message):
         """Speak an English alert or play a Hindi audio file."""
 
         if self.language == "en":
 
-            # Create a fresh engine for every message
-            engine = pyttsx3.init()
-            engine.setProperty("rate", 155)
-            engine.setProperty("volume", 1.0)
+            if pyttsx3 is None:
+                print("Text-to-speech is unavailable:", message)
+                return
 
-            engine.say(message)
-            engine.runAndWait()
-            engine.stop()
+            try:
+                engine = pyttsx3.init()
+                engine.setProperty("rate", 155)
+                engine.setProperty("volume", 1.0)
+                engine.say(message)
+                engine.runAndWait()
+                engine.stop()
+                del engine
 
-            del engine
+            except Exception as e:
+                print("English speech unavailable:", e)
 
         elif self.language == "hi":
+
+            if not self.audio_available:
+                print("Hindi audio playback unavailable:", message)
+                return
 
             filename = self._get_hindi_filename(message)
 
             if os.path.exists(filename):
-                pygame.mixer.music.load(filename)
-                pygame.mixer.music.play()
+                try:
+                    pygame.mixer.music.load(filename)
+                    pygame.mixer.music.play()
 
-                while pygame.mixer.music.get_busy():
-                    pygame.time.Clock().tick(10)
+                    while pygame.mixer.music.get_busy():
+                        pygame.time.Clock().tick(10)
+
+                except Exception as e:
+                    print("Hindi audio playback failed:", e)
 
             else:
                 print("Hindi audio not found:", message)
@@ -61,5 +86,6 @@ class Speech:
     def close(self):
         """Release audio resources."""
 
-        if self.language == "hi":
+        if self.audio_available:
             pygame.mixer.quit()
+            self.audio_available = False
