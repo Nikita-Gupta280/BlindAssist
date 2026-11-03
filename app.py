@@ -161,6 +161,13 @@ if "audio_queue" not in st.session_state:
     st.session_state.audio_queue = queue.Queue(maxsize=1)
 
 audio_queue = st.session_state.audio_queue
+if "speech_thread" not in st.session_state:
+    st.session_state.speech_thread = threading.Thread(
+        target=speech_worker,
+        args=(audio_queue,),
+        daemon=True
+    )
+    st.session_state.speech_thread.start()
 
 def vision_worker(runtime, stop_event, audio_queue):
 
