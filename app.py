@@ -364,42 +364,32 @@ with runtime["lock"]:
 
 
 # --------------------------------
-# Start / Stop buttons
+# WebRTC live camera
 # --------------------------------
 
-col1, col2, col3 = st.columns([1, 1, 2])
+st.subheader("Live Camera")
 
-with col1:
+ctx = webrtc_streamer(
+    key="blindassist-camera",
+    video_processor_factory=lambda: CameraProcessor(
+        runtime,
+        audio_queue
+    ),
+    media_stream_constraints={
+        "video": True,
+        "audio": False
+    },
+    rtc_configuration={
+        "iceServers": [
+            {"urls": ["stun:stun.l.google.com:19302"]}
+        ]
+    },
+)
 
-    if st.button(
-        "▶ Start Detection",
-        use_container_width=True,
-        disabled=runtime["running"]
-    ):
-
-        start_detection(runtime)
-        st.rerun()
-
-
-with col2:
-
-    if st.button(
-        "■ Stop Detection",
-        use_container_width=True,
-        disabled=not runtime["running"]
-    ):
-
-        stop_detection(runtime)
-        st.rerun()
-
-
-with col3:
-
-    st.write(
-        "System status:",
-        runtime["status"]
-    )
-
+if ctx.state.playing:
+    st.success("Live camera connected")
+else:
+    st.info("Click START to activate your laptop camera.")
 
 st.divider()
 
