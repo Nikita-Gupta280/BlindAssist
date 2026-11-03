@@ -5,7 +5,7 @@ import time
 import queue
 import threading
 
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 import av
 
 from vision.detector import ObjectDetector
