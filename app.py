@@ -153,6 +153,15 @@ def speech_worker(audio_queue):
 # Vision worker
 # --------------------------------
 
+# --------------------------------
+# Shared audio queue
+# --------------------------------
+
+if "audio_queue" not in st.session_state:
+    st.session_state.audio_queue = queue.Queue(maxsize=1)
+
+audio_queue = st.session_state.audio_queue
+
 def vision_worker(runtime, stop_event, audio_queue):
 
     camera = CameraStream(source=CAMERA_SOURCE).start()
