@@ -1,4 +1,4 @@
-opencv-python
+opencv-python-headless
 ultralytics
 numpy
 pytest==8.3.5
