@@ -4,5 +4,4 @@ numpy
 pytest==8.3.5
 pyttsx3
 gTTS
-pygame
 streamlit
