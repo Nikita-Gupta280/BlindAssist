@@ -182,9 +182,13 @@ BlindAssist is an assistive technology prototype under development.
 Developed as a collaborative project focused on building accessible technology through computer vision and assistive AI.
 
 Team Members:-
+
 Ishita Sanger
+
 Kashish Gupta
+
 Nikita Gupta
+
 Bhawana Gautam 
 
 
